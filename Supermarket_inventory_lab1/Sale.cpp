@@ -2,10 +2,8 @@
 #include <iostream>
 #include "Inventory.hpp"
 
-Sale::Sale(std::string name, Inventory* inventory): name { name }, inventory { inventory }
-{
-	this->earnedMoney = 0.0f;
-}
+Sale::Sale(std::string name, Inventory* inventory): name { name }, inventory { inventory }, earnedMoney(0.0f)
+{}
 
 void Sale::addProductToSale(Product* product, int requestedQuantity)
 {
@@ -14,7 +12,6 @@ void Sale::addProductToSale(Product* product, int requestedQuantity)
 
 void Sale::run()
 {
-	this->mutex.lock();
 	//std::cout << "Start sale " << this->name << "\n";
 	Bill* bill = new Bill();
 	for (std::pair<Product*, int> pair : this->productsForSale)
@@ -22,10 +19,8 @@ void Sale::run()
 		Product* product = pair.first;
 		int requestedQuantity = pair.second;
 		this->inventory->buyProduct(product, requestedQuantity, *bill);
-		//std::cout << "bill: " << bill->getNoProducts() << std::endl;
 	}
 	this->inventory->addBill(bill);
-	this->mutex.unlock();
 }
 
 std::string Sale::getName()

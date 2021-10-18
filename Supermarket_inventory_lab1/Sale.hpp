@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <map>
-#include <mutex>
 #include "Bill.hpp"
 #include "Inventory.hpp"
 
@@ -12,7 +11,6 @@ private:
 	float earnedMoney;
 	std::map<Product*, int> productsForSale;
 	Inventory* inventory;
-	std::mutex mutex;
 
 public:
 	Sale(std::string name, Inventory* inventory);

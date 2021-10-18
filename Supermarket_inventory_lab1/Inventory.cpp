@@ -3,24 +3,18 @@
 #include <mutex>
 
 
-Inventory::Inventory(std::vector<Product*> products): products {products}
-{
-	this->buget = 0.0f;
-	this->bills = std::vector<Bill*>();
-}
+Inventory::Inventory(std::vector<Product*> products): products {products}, buget(0.0f), bills{ std::vector<Bill*>() }
+{}
 
 void Inventory::buyProduct(Product* product, int quantity, Bill& bill)
 {
-	//this->mutex.lock();
 	if (!product->decreaseAvailableQuantity(quantity))
 	{
-		//this->mutex.unlock();
 		return;
 	}
 	this->buget += quantity * product->getPrice();
 
 	bill.addProductToBill(product, quantity);
-	//this->mutex.unlock();
 	//std::cout << "Successfully sold " << quantity << " from product " << product->getName() << " !\n";
 }
 

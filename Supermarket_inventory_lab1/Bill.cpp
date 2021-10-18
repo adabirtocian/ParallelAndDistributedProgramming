@@ -1,11 +1,8 @@
 #include "Bill.hpp"
 #include <iostream>
 
-Bill::Bill()
-{
-	this->soldProducts = std::map<Product*, int>();
-	this->totalPrice = 0.0f;
-}
+Bill::Bill(): soldProducts{ std::map<Product*, int>() }, totalPrice(0.0f)
+{}
 
 void Bill::addProductToBill(Product* product, int quantity)
 {
