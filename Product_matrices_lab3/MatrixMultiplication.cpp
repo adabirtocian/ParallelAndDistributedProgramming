@@ -14,6 +14,7 @@ void MatrixMultiplication::computeOneElement(int resultRow, int resultCol)
 		value += this->a.getValue(resultRow, i) * this->b.getValue(i, resultCol);
 	}
 	this->result.setValue(resultRow, resultCol, value);
+	//std::cout << resultRow << " " << resultCol << " " << value << "\n";
 }
 
 void MatrixMultiplication::multiplySection(int startIdx, int stopIdx)
