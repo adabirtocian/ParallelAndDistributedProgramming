@@ -22,7 +22,7 @@ int main()
 
 	const int NO_TASKS = 10;
 	const int NO_ELEMS_PER_TASK = (ROWS_RESULT * COLS_RESULT) / NO_TASKS;
-	std::string METHOD = "thread pool";
+	std::string METHOD = "threads";
 
 	Matrix a = Matrix(ROWS_1, COLS_1);
 	a.initializeWithValues();
@@ -30,10 +30,10 @@ int main()
 	Matrix b = Matrix(ROWS_2, COLS_2);
 	b.initializeWithValues();
 
-	//a.print();
-	//std::cout << std::endl;
-	//b.print();
-	//std::cout << std::endl;
+	a.print();
+	std::cout << std::endl;
+	b.print();
+	std::cout << std::endl;
 
 	Matrix result = Matrix(ROWS_RESULT, COLS_RESULT);
 	MatrixMultiplication multiplication = MatrixMultiplication(a, b, result, NO_TASKS);
@@ -73,7 +73,7 @@ int main()
 		pool.close();
 	}
 	std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	//result.print();
+	result.print();
 	std::cout << "Time: " << (end - start).count() << " ms\n";
 
 	return 0;
