@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -21,6 +22,9 @@ namespace Futures_continuations_lab4
 
         // received response data 
         public StringBuilder responseContent = new StringBuilder();
+
+        // server's ip address
+        public IPEndPoint remoteEndpoint;
 
     }
 }
