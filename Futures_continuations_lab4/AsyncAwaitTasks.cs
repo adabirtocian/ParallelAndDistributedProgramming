@@ -5,10 +5,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 namespace Futures_continuations_lab4
 {
-    public static class Tasks
+    public static class AsyncAwaitTasks
     {
         private static List<string> hosts;
 
@@ -26,13 +25,13 @@ namespace Futures_continuations_lab4
             Thread.Sleep(60000);
         }
 
-        private static void StartTask(object hostObj)
+        private static async void StartTask(object hostObj)
         {
             var host = (string)hostObj;
             Console.WriteLine("Start {0}", host);
 
             string hostname = host.Split('/')[0];
-            
+
             // get the DNS IP address associated with the host.
             var ipAddress = Dns.GetHostEntry(hostname).AddressList[0];
 
@@ -52,24 +51,30 @@ namespace Futures_continuations_lab4
             };
 
             // connect to the host endpoint
-            Task<Socket> futureConnect = ConnectWrapper(state);
+            Socket socket = await ConnectWrapper(state);
             
             // update the socket (now it is connected) 
-            state.socket = futureConnect.Result;
+            state.socket = socket;
             Console.WriteLine("Socket connected to {0} IP: {1}", state.hostname, state.socket.RemoteEndPoint);
 
             // send the GET request
-            Task<int> futureSend = SendGetRequest(state);
+            int bytesSent = await SendGetRequest(state);
+            Console.WriteLine("Sent {0} bytes to {1}.", bytesSent, state.hostname);
 
             // receive the response from the host
-            futureSend.ContinueWith((Task<int> f) => ReceiveResponseWrapper(state, f));
+            int bytesReceived = await ReceiveResponseWrapper(state);
+            int contentLength = await ReceivingContent(state, bytesReceived);
+
+            Console.WriteLine("Content-length = {0}", contentLength);
+
+            state.socket.Close();
 
         }
         private static Task<Socket> ConnectWrapper(State state)
         {
             TaskCompletionSource<Socket> promise = new TaskCompletionSource<Socket>();
 
-            state.socket.BeginConnect(state.remoteEndpoint, 
+            state.socket.BeginConnect(state.remoteEndpoint,
                 (IAsyncResult ar) => {
                     state.socket.EndConnect(ar);
                     promise.SetResult(state.socket);
@@ -88,50 +93,41 @@ namespace Futures_continuations_lab4
             TaskCompletionSource<int> promise = new TaskCompletionSource<int>();
 
             // send the GET request
-            state.socket.BeginSend(getRequestBytes, 0, getRequestBytes.Length, 0, 
-                (IAsyncResult ar) => promise.SetResult(state.socket.EndSend(ar)), state);
-
-            Console.WriteLine("Sent {0} bytes to {1}.", promise.Task.Result, state.hostname);
+            state.socket.BeginSend(getRequestBytes, 0, getRequestBytes.Length, 0,
+                (IAsyncResult ar) => promise.SetResult(state.socket.EndSend(ar)), state);  
 
             return promise.Task;
         }
 
-        private static void ReceiveResponseWrapper(State state, Task<int> future)
+        private static Task<int> ReceiveResponseWrapper(State state)
         {
             TaskCompletionSource<int> promise = new TaskCompletionSource<int>();
 
             // receive a fixed-length response
-            state.socket.BeginReceive(state.buffer, 0, State.BUFFER_SIZE, 0, 
+            state.socket.BeginReceive(state.buffer, 0, State.BUFFER_SIZE, 0,
                 (IAsyncResult ar) => promise.SetResult(state.socket.EndReceive(ar)), state);
 
-            Task<int> futureReceive = promise.Task;
-
-            // attempt to receive the remaining of the response (if needed)
-            futureReceive.ContinueWith((Task<int> f) => ReceivingContent(state, f));
+            return promise.Task;
         }
 
-        private static void ReceivingContent(State state, Task<int> future)
+        private static async Task<int> ReceivingContent(State state, int bytesReceived)
         {
-            // get the number of received bytes so far
-            int bytesReceived = future.Result;
-
             // save the received content
             state.responseContent.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesReceived));
             Console.WriteLine("Received {0} bytes from {1}", bytesReceived, state.hostname);
 
-            if (!HttpUtils.hasEntireResponseHeader(state.responseContent.ToString()))
+            while (!HttpUtils.hasEntireResponseHeader(state.responseContent.ToString()))
             {
                 // get the rest of the response header
-                ReceiveResponseWrapper(state, future);
+                bytesReceived = await ReceiveResponseWrapper(state);
+                state.responseContent.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesReceived));
+                Console.WriteLine("Received {0} bytes from {1}", bytesReceived, state.hostname);
             }
-            else
-            {
-                // response header was entirely received
-                int contentLength = HttpUtils.getContentLengthFromHeader(state.responseContent.ToString());
-                Console.WriteLine("Received {0} bytes from {1} -> content-length = {2}", bytesReceived, state.hostname, contentLength);
-            }
+            
+            // response header was entirely received
+            int contentLength = HttpUtils.getContentLengthFromHeader(state.responseContent.ToString());
 
-            state.socket.Close();
+            return contentLength;
         }
     }
 }

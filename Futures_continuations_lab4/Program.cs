@@ -18,8 +18,15 @@ namespace Futures_continuations_lab4
 
         public static void Main(string[] args)
         {
-            //Callbacks.run(HOSTS);
-            Tasks.run(HOSTS);
+            try
+            {
+                //Callbacks.run(HOSTS);
+                //Tasks.run(HOSTS);
+                AsyncAwaitTasks.run(HOSTS);
+            } catch(Exception ex)
+            {
+                Console.WriteLine("Exception caught {0}: ", ex);
+            }
         }
     }
 }
