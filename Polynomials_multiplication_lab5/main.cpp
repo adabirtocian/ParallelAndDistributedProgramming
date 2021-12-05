@@ -1,6 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include "RegularAlgorithm.hpp"
+#include "RegularAlgorithmParallelized.hpp"
+
 
 std::vector<int> generatePolynomialCoefficients(int size)
 {
@@ -9,10 +12,10 @@ std::vector<int> generatePolynomialCoefficients(int size)
 
 	for (int i = 0; i < size - 1; ++i)
 	{
-		polynomial[i] = rand() % 10;
+		polynomial[i] = rand() % 1000;
 		std::cout << polynomial[i] << " * x^" << i << " + ";
 	}
-	polynomial[size - 1] = rand() % 10 + 1;
+	polynomial[size - 1] = rand() % 1000 + 1;
 	std::cout << polynomial[size - 1] << " * x^" << size - 1 << "\n";
 
 	return polynomial;
@@ -35,8 +38,18 @@ int main()
 	std::vector<int> polynomial2 = generatePolynomialCoefficients(size2);
 
 	RegularAlgorithm regularAlgo = RegularAlgorithm(polynomial1, polynomial2, size1, size2);
-	regularAlgo.multiply();
-	std::cout << "Result: \n" << regularAlgo.getPolynomialResult();
+	RegularAlgorithmParallelized regularAlgoParallelized = RegularAlgorithmParallelized(polynomial1, polynomial2, size1, size2);
+	
+	std::chrono::milliseconds start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+	
+	//regularAlgo.multiply();
+	regularAlgoParallelized.multiply();
+
+	std::chrono::milliseconds end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
+	//std::cout << "Result: \n" << regularAlgo.getPolynomialResult() << "\n";
+	std::cout << "Result: \n" << regularAlgoParallelized.getPolynomialResult() << "\n";
+	std::cout << "Time: " << (end - start).count() << " ms \n";
 
 	return 0;
 }
