@@ -3,7 +3,7 @@
 RegularAlgorithm::RegularAlgorithm(std::vector<int> polynomial1, std::vector<int> polynomial2, int size1, int size2): 
 	polynomial1{polynomial1}, polynomial2{polynomial2}, size1{size1}, size2{size2}
 {
-	this->sizeResult = size1 + size2 - 1;
+	this->sizeResult = size1 + size2;
 	this->result = std::vector<int>(this->sizeResult, 0);
 }
 
@@ -27,4 +27,9 @@ std::string RegularAlgorithm::getPolynomialResult()
 	}
 	result.erase(result.size() - 3, 3);
 	return result;
+}
+
+std::vector<int> RegularAlgorithm::getResult()
+{
+	return this->result;
 }

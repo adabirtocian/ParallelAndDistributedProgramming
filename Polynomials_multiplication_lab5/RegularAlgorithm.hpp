@@ -16,4 +16,5 @@ public:
 	RegularAlgorithm(std::vector<int> polynomial1, std::vector<int> polynomial2, int size1, int size2);
 	void multiply();
 	std::string getPolynomialResult();
+	std::vector<int> getResult();
 };
