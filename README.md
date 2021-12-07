@@ -29,3 +29,15 @@ Try three implementations:
   * Directly implement the parser on the callbacks (event-driven);
   * Wrap the connect/send/receive operations in tasks, with the callback setting the result of the task;
   * Like the previous, but also use the async/await mechanism.
+
+
+[Lab 5 - Parallelizing techniques](Polynomials_multiplication_lab5)  
+Perform the multiplication of 2 polynomials. Use both the regular O(n2) algorithm and the Karatsuba algorithm, and each in both the sequencial 
+form and a parallelized form. Compare the 4 variants.  
+
+| Degrees	| Regular	| Regular parallelized |	Karatsuba |	Karatsuba parallelized |  
+| ------- |:-------:|:--------------------:|:----------:|:----------------------:|  
+| 255, 255	| 1 ms	| 742 ms	| 37 ms |	486 ms |  
+| 63, 31 |	0 ms	| 138 ms |	5 ms |	41 ms |  
+| 63, 127 |	0 ms |	278 ms	| 8 ms	| 106ms |  
+| 511, 255 |	2 ms	| 1143 ms |	82 ms |	49576 ms |  
