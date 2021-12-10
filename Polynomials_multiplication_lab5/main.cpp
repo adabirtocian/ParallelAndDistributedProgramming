@@ -52,14 +52,14 @@ int main()
 	std::chrono::milliseconds endK = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 	
 	std::chrono::milliseconds startKP = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	//karatsubaAlgoParallelized.multiply();
+	karatsubaAlgoParallelized.multiply();
 	std::chrono::milliseconds endKP = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 
 
 	std::cout << "\nTime: " << (endR - startR).count() << " ms \n\n";
 	std::cout << "\nTime: " << (endRP - startRP).count() << " ms \n";
 	std::cout << "\nTime: " << (endK - startK).count() << " ms \n";
-	//std::cout << "\nTime: " << (endKP - startKP).count() << " ms \n";
+	std::cout << "\nTime: " << (endKP - startKP).count() << " ms \n";
 
 	return 0;
 }
