@@ -14,7 +14,7 @@ private:
 public:
 	DirectedGraph(std::vector<Node*> nodes);
 	void findHamiltoneanCycle(int threads);
-	void printCycle(Node* node, std::vector<Node*> visitedNodes);
+	void printCycle(Node& node, std::vector<Node*> visitedNodes);
 
 };
 

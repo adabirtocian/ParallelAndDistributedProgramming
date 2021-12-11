@@ -23,6 +23,7 @@ int main()
 	node4.addGoToNode(&node6);
 	node4.addGoToNode(&node5);
 	//node5.addGoToNode(&node2);
+	node5.addGoToNode(&node3);
 	node7.addGoToNode(&node8);
 	node8.addGoToNode(&node9);
 	node9.addGoToNode(&node7);

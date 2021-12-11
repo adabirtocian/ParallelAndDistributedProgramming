@@ -12,7 +12,7 @@ void DirectedGraph::findHamiltoneanCycleRecursive(Node& node, std::vector<Node*>
 	if (std::find(visitedNodes.begin(), visitedNodes.end(), &node) != visitedNodes.end())
 	{
 		this->hasHamiltoneanCycle = true;
-		this->printCycle(&node, visitedNodes);
+		this->printCycle(node, visitedNodes);
 		return;
 	}
 
@@ -43,17 +43,14 @@ void DirectedGraph::findHamiltoneanCycle(int threads)
 	}
 }
 
-void DirectedGraph::printCycle(Node* node, std::vector<Node*> visitedNodes)
+void DirectedGraph::printCycle(Node& node, std::vector<Node*> visitedNodes)
 {
-	std::cout << *node;
-	int i = visitedNodes.size() - 1;
-	Node* currentNode = visitedNodes[i];
-	
-	while (currentNode->getInfo() != node->getInfo())
+	auto it = std::find(visitedNodes.begin(), visitedNodes.end(), &node);
+
+	for (auto i = it; i != visitedNodes.end(); ++i)
 	{
-		std::cout << *currentNode;
-		i--;
-		currentNode = visitedNodes[i];
+		std::cout << **i;
 	}
-	std::cout << *node;
+	
+	std::cout << node;
 }
