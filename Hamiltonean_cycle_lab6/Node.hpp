@@ -20,6 +20,7 @@ public:
 
 	void addGoToNode(Node* node);
 	friend std::ostream& operator<< (std::ostream& out, const Node& node);
+	bool operator==(const Node node);
 	
 
 };

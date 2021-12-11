@@ -1,15 +1,15 @@
 #include "DirectedGraph.hpp"
-#include <time.h>
 #include <iostream>
+#include <algorithm>
 
 
 DirectedGraph::DirectedGraph(std::vector<Node*> nodes): hasHamiltoneanCycle{false}, nodes{nodes}
 {
 }
 
-void DirectedGraph::findHamiltoneanCycleRecursive(Node& node, std::stack<Node*> visitedNodes)
+void DirectedGraph::findHamiltoneanCycleRecursive(Node& node, std::vector<Node*> visitedNodes)
 {
-	if (node.getVisited())
+	if (std::find(visitedNodes.begin(), visitedNodes.end(), &node) != visitedNodes.end())
 	{
 		this->hasHamiltoneanCycle = true;
 		this->printCycle(&node, visitedNodes);
@@ -17,7 +17,7 @@ void DirectedGraph::findHamiltoneanCycleRecursive(Node& node, std::stack<Node*> 
 	}
 
 	node.setVisited(true);
-	visitedNodes.push(&node);
+	visitedNodes.push_back(&node);
 	
 	for (int i = 0; i < node.getGoToNodes().size(); ++i)
 	{
@@ -27,39 +27,33 @@ void DirectedGraph::findHamiltoneanCycleRecursive(Node& node, std::stack<Node*> 
 
 		}
 		Node* goToNode = node.getGoToNodes()[i];
-		if (goToNode->getVisited())
-		{
-			this->hasHamiltoneanCycle = true;
-			this->printCycle(goToNode, visitedNodes);
-			return;
-		}
 		this->findHamiltoneanCycleRecursive(*goToNode, visitedNodes);
 	}
 }
 
 void DirectedGraph::findHamiltoneanCycle(int threads)
 {
-	std::stack<Node*> visitedNodes;
-	this->findHamiltoneanCycleRecursive(*this->nodes[0], visitedNodes);
+	for (auto node : this->nodes)
+	{
+		if (!node->getVisited())
+		{
+			std::vector<Node*> visitedNodes;
+			this->findHamiltoneanCycleRecursive(*node, visitedNodes);
+		}
+	}
 }
 
-void DirectedGraph::printCycle(Node* node, std::stack<Node*> visitedNodes)
+void DirectedGraph::printCycle(Node* node, std::vector<Node*> visitedNodes)
 {
-	std::vector<Node*> cycle;
-	Node* currentNode = visitedNodes.top();
-	visitedNodes.pop();
-	cycle.push_back(node);
-
+	std::cout << *node;
+	int i = visitedNodes.size() - 1;
+	Node* currentNode = visitedNodes[i];
+	
 	while (currentNode->getInfo() != node->getInfo())
 	{
-		cycle.insert(cycle.begin(), currentNode);
-		currentNode = visitedNodes.top();
-		visitedNodes.pop();
+		std::cout << *currentNode;
+		i--;
+		currentNode = visitedNodes[i];
 	}
-	cycle.insert(cycle.begin(), currentNode);
-
-	for (auto node : cycle)
-	{
-		std::cout << *node;
-	}
+	std::cout << *node;
 }

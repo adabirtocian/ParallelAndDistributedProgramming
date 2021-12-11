@@ -35,6 +35,11 @@ void Node::addGoToNode(Node* node)
     this->goToNodes.push_back(node);
 }
 
+bool Node::operator==(const Node node)
+{
+    return this->information == node.information;
+}
+
 std::ostream& operator<<(std::ostream& out, const Node& node)
 {
     out << node.information << " -> ";
