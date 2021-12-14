@@ -9,7 +9,6 @@ class DirectedGraph
 private:
 	std::vector<Node*> nodes;
 	std::atomic<int> hasHamiltoneanCycle;
-	//int hasHamiltoneanCycle;
 
 	void findHamiltoneanCycleRecursive(Node& node, std::vector<Node*> visitedNodes, int threads);
 
