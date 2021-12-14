@@ -36,17 +36,25 @@ void DirectedGraph::findHamiltoneanCycleRecursive(Node& node, std::vector<Node*>
 		// go through all the possible edges starting from current node
 		for (int i = 0; i < node.getGoToNodes().size() - 1; i += 2)
 		{
-			Node* goToNode = node.getGoToNodes()[i];
-			// lauch async thread to continue the search from goToNode
-			std::future<void> other = std::async(std::launch::async, [this, goToNode, visitedNodes, threads]() { this->findHamiltoneanCycleRecursive(*goToNode, visitedNodes, threads / 2);  });
-			
-			// take the next edge
-			goToNode = node.getGoToNodes()[i + 1];
-			// search on main thread starting from goToNode
-			this->findHamiltoneanCycleRecursive(*goToNode, visitedNodes, threads - threads / 2);
+			Node* goToNode;
 
-			// wait for async thread to finish
-			other.wait();
+			if (i < node.getGoToNodes().size())
+			{
+				goToNode = node.getGoToNodes()[i];
+				// lauch async thread to continue the search from goToNode
+				std::future<void> other = std::async(std::launch::async, [this, goToNode, visitedNodes, threads]() { this->findHamiltoneanCycleRecursive(*goToNode, visitedNodes, threads / 2);  });
+			
+				if (i + 1 < node.getGoToNodes().size())
+				{
+					// take the next edge
+					goToNode = node.getGoToNodes()[i + 1];
+					// search on main thread starting from goToNode
+					this->findHamiltoneanCycleRecursive(*goToNode, visitedNodes, threads - threads / 2);
+				}
+
+				// wait for async thread to finish
+				other.wait();
+			}
 		}
 
 		// if odd number of edges, ensure to explore the last one as well
