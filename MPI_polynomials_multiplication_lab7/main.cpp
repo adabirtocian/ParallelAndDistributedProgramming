@@ -70,7 +70,7 @@ void regularWorker(int processId)
     std::vector<int> partialResult = multiplySection(size1, size2, start, end, polynomial1, polynomial2);
 
     // send the result back to master
-    MPI_Ssend(partialResult.data(), size1+size2, MPI_INT, 0, 2, MPI_COMM_WORLD);
+    MPI_Ssend(partialResult.data(), partialResult.size(), MPI_INT, 0, 2, MPI_COMM_WORLD);
 }
 
 void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int> polynomial2)
@@ -104,11 +104,11 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
     // do master part of the computation
     std::vector<int> finalResult = multiplySection(size1, size2, 0, workerLength-1, polynomial1, polynomial2);
     MPI_Status status;
-    std::vector<int> workerResult = std::vector<int>(size1 + size2, 0);
+    std::vector<int> workerResult = std::vector<int>(size1 + size2-1, 0);
 
     for (int i = 1; i < processes; ++i)
     {
-        MPI_Recv(workerResult.data(), size1 + size2, MPI_INT, i, 2, MPI_COMM_WORLD, &status);
+        MPI_Recv(workerResult.data(), size1 + size2-1, MPI_INT, i, 2, MPI_COMM_WORLD, &status);
         finalResult = aggregateResults(finalResult, workerResult);
     }
     //for (int i = 0; i < finalResult.size(); ++i)
@@ -117,7 +117,10 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
     //}
 }
 
+void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<int> polynomial2)
+{
 
+}
 int main(int argc, char** argv) 
 {
     // Initialize the MPI environment
