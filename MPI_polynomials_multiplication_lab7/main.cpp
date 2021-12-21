@@ -64,7 +64,7 @@ void regularWorker(int processId)
     polynomial2.resize(size2);
     MPI_Recv(polynomial2.data(), size2, MPI_INT, 0, 2, MPI_COMM_WORLD, &status);
 
-    std::cout << "Worker "<<processId << " " << start << " " << end << " " << size1 << " " << size2 << "\n";
+    std::cout << "Worker "<<processId << ": " << start << " " << end << "\n";
 
     // do the computations
     std::vector<int> partialResult = multiplySection(size1, size2, start, end, polynomial1, polynomial2);
@@ -89,7 +89,7 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
             end = size1 - 1;
         }
 
-        std::cout << "Master sends: " << start << " " << end << " " << size1 << " " << size2 << "\n";
+        std::cout << "Master sends: " << start << " " << end << "\n";
         // send the indices
         MPI_Send(&start, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
         MPI_Ssend(&end, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
@@ -111,11 +111,12 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
         MPI_Recv(workerResult.data(), size1 + size2, MPI_INT, i, 2, MPI_COMM_WORLD, &status);
         finalResult = aggregateResults(finalResult, workerResult);
     }
-    for (int i = 0; i < finalResult.size(); ++i)
-    {
-        std::cout << finalResult[i] << " ";
-    }
+    //for (int i = 0; i < finalResult.size(); ++i)
+    //{
+    //    std::cout << finalResult[i] << " ";
+    //}
 }
+
 
 int main(int argc, char** argv) 
 {
@@ -153,16 +154,16 @@ int main(int argc, char** argv)
         // generate 2 polynomials
         std::vector<int> polynomial1 = generatePolynomialCoefficients(size1);
         std::vector<int> polynomial2 = generatePolynomialCoefficients(size2, 5);
-        std::cout << "Polynomials generated with sizes "<<size1 << " and " << size2 << "\n";
-        for (int i : polynomial1)
-        {
-            std::cout << i << " ";
-        }
-        std::cout << "\n";
-        for (int i : polynomial2)
-        {
-            std::cout << i << " ";
-        }
+        //std::cout << "Polynomials generated with sizes "<<size1 << " and " << size2 << "\n";
+        //for (int i : polynomial1)
+        //{
+        //    std::cout << i << " ";
+        //}
+        //std::cout << "\n";
+        //for (int i : polynomial2)
+        //{
+        //    std::cout << i << " ";
+        //}
         // set the method to be used in multiplication
         if (method == "regular")
         {
