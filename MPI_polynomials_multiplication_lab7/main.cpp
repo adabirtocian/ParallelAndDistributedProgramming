@@ -437,8 +437,6 @@ void karatsubaWorker(int processId)
     {
         std::cout << "Worker"<< processId <<": workers=" << workers << "\n";
         workersIds = std::vector<int>(workers);
-        //if (processId == 1) workersIds[0] = 3;
-        //else workersIds[0] = 4;
         MPI_Recv(workersIds.data(), workers, MPI_INT, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD, &status);
         for (auto w : workersIds)
             std::cout << w << " ";
@@ -473,7 +471,6 @@ void karatsubaWorker(int processId)
     
         if (workers == 1)
         {
-            std::cout << "1 worker\n";
             // one worker
             // send lower parts to be computed by the worker
             MPI_Ssend(&processId, 1, MPI_INT, workersIds[0], 0, MPI_COMM_WORLD); // send parent id
@@ -495,31 +492,35 @@ void karatsubaWorker(int processId)
         {
             // 2 workers
             // send lower parts to be computed by the first worker
-            //MPI_Ssend(&masterId, 1, MPI_INT, workersIds[0], 0, MPI_COMM_WORLD); // send parent id
-            //MPI_Ssend(&sizeSmallCoeffP1, 1, MPI_INT, workersIds[0], 1, MPI_COMM_WORLD);
-            //MPI_Ssend(smallCoeffP1.data(), sizeSmallCoeffP1, MPI_INT, workersIds[0], 2, MPI_COMM_WORLD);
-            //MPI_Ssend(&sizeSmallCoeffP2, 1, MPI_INT, workersIds[0], 1, MPI_COMM_WORLD);
-            //MPI_Ssend(smallCoeffP2.data(), sizeSmallCoeffP2, MPI_INT, workersIds[0], 2, MPI_COMM_WORLD);
-            //MPI_Ssend(&totalRemainingWorkers, 1, MPI_INT, workersIds[0], 3, MPI_COMM_WORLD); // send the remaining workers available
-            //
-            //// send higher parts to be computed by the second worker
-            //MPI_Ssend(&masterId, 1, MPI_INT, workersIds[1], 0, MPI_COMM_WORLD); // send parent id
-            //MPI_Ssend(&sizeBigCoeffP1, 1, MPI_INT, workersIds[1], 1, MPI_COMM_WORLD);
-            //MPI_Ssend(bigCoeffP1.data(), sizeSmallCoeffP1, MPI_INT, workersIds[1], 2, MPI_COMM_WORLD);
-            //MPI_Ssend(&sizeBigCoeffP2, 1, MPI_INT, workersIds[1], 1, MPI_COMM_WORLD);
-            //MPI_Ssend(bigCoeffP2.data(), sizeSmallCoeffP2, MPI_INT, workersIds[1], 2, MPI_COMM_WORLD);
-            //MPI_Ssend(&totalRemainingWorkers, 1, MPI_INT, workersIds[1], 3, MPI_COMM_WORLD); // send the remaining workers available
-            //
-            //// maser takes care of the rest
-            //sumPartsCoeffs = karatsubaRecursiveAsync(sumPartsP1, sumPartsP2);
-            //
-            //MPI_Recv(&sizeSmallCoeffs, 1, MPI_INT, workersIds[0], 1, MPI_COMM_WORLD, &status); // receive size of the partial computation
-            //smallCoeffs = std::vector<int>(sizeSmallCoeffs, 0);
-            //MPI_Recv(smallCoeffs.data(), sizeSmallCoeffs, MPI_INT, workersIds[0], 2, MPI_COMM_WORLD, &status); // receive the result as vector
-            //
-            //MPI_Recv(&sizeBigCoeffs, 1, MPI_INT, workersIds[1], 1, MPI_COMM_WORLD, &status); // receive size of the partial computation
-            //bigCoeffs = std::vector<int>(sizeBigCoeffs, 0);
-            //MPI_Recv(bigCoeffs.data(), sizeBigCoeffs, MPI_INT, workersIds[1], 2, MPI_COMM_WORLD, &status); // receive the result as vector
+            MPI_Ssend(&processId, 1, MPI_INT, workersIds[0], 0, MPI_COMM_WORLD); // send parent id
+            MPI_Ssend(&sizeSmallCoeffP1, 1, MPI_INT, workersIds[0], 1, MPI_COMM_WORLD);
+            MPI_Ssend(smallCoeffP1.data(), sizeSmallCoeffP1, MPI_INT, workersIds[0], 2, MPI_COMM_WORLD);
+            MPI_Ssend(&sizeSmallCoeffP2, 1, MPI_INT, workersIds[0], 1, MPI_COMM_WORLD);
+            MPI_Ssend(smallCoeffP2.data(), sizeSmallCoeffP2, MPI_INT, workersIds[0], 2, MPI_COMM_WORLD);
+            MPI_Ssend(&totalRemainingWorkers, 1, MPI_INT, workersIds[0], 3, MPI_COMM_WORLD); // send the remaining workers available
+            
+            // send higher parts to be computed by the second worker
+            MPI_Ssend(&processId, 1, MPI_INT, workersIds[1], 0, MPI_COMM_WORLD); // send parent id
+            MPI_Ssend(&sizeBigCoeffP1, 1, MPI_INT, workersIds[1], 1, MPI_COMM_WORLD);
+            MPI_Ssend(bigCoeffP1.data(), sizeSmallCoeffP1, MPI_INT, workersIds[1], 2, MPI_COMM_WORLD);
+            MPI_Ssend(&sizeBigCoeffP2, 1, MPI_INT, workersIds[1], 1, MPI_COMM_WORLD);
+            MPI_Ssend(bigCoeffP2.data(), sizeSmallCoeffP2, MPI_INT, workersIds[1], 2, MPI_COMM_WORLD);
+            MPI_Ssend(&totalRemainingWorkers, 1, MPI_INT, workersIds[1], 3, MPI_COMM_WORLD); // send the remaining workers available
+            
+            // master takes care of the rest
+            sumPartsCoeffs = karatsubaRecursiveAsync(sumPartsP1, sumPartsP2);
+            
+            MPI_Recv(&sizeSmallCoeffs, 1, MPI_INT, workersIds[0], 1, MPI_COMM_WORLD, &status); // receive size of the partial computation
+            smallCoeffs = std::vector<int>(sizeSmallCoeffs, 0);
+            MPI_Recv(smallCoeffs.data(), sizeSmallCoeffs, MPI_INT, workersIds[0], 2, MPI_COMM_WORLD, &status); // receive the result as vector
+            
+            MPI_Recv(&sizeBigCoeffs, 1, MPI_INT, workersIds[1], 1, MPI_COMM_WORLD, &status); // receive size of the partial computation
+            bigCoeffs = std::vector<int>(sizeBigCoeffs, 0);
+            MPI_Recv(bigCoeffs.data(), sizeBigCoeffs, MPI_INT, workersIds[1], 2, MPI_COMM_WORLD, &status); // receive the result as vector
+        }
+        else
+        {
+
         }
     
         middleCoeffs = substract2Polynomials(substract2Polynomials(sumPartsCoeffs, smallCoeffs), bigCoeffs);
