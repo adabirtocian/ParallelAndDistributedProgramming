@@ -20,6 +20,20 @@ std::vector<int> generatePolynomialCoefficients(int size, int additional=0)
     return polynomial;
 }
 
+void printResult(std::vector<int> result)
+{
+    std::string resultStr = "";
+    for (int i = result.size() - 1; i >= 0; --i)
+    {
+        if (result[i] != 0)
+        {
+            resultStr += std::to_string(result[i]) + " * x^" + std::to_string(i) + " + ";
+        }
+    }
+    resultStr.erase(resultStr.size() - 3, 3);   //eliminate last plus sign from string
+
+    std::cout << "\nResult: " << resultStr << "\n";
+}
 
 std::vector<int> multiplySection(int size1, int size2,int start, int end, std::vector<int> polynomial1, std::vector<int> polynomial2)
 {
@@ -66,7 +80,7 @@ void regularWorker(int processId)
     polynomial2.resize(size2);
     MPI_Recv(polynomial2.data(), size2, MPI_INT, 0, 2, MPI_COMM_WORLD, &status);
 
-    std::cout << "Worker "<<processId << ": " << start << " " << end << "\n";
+    //std::cout << "Worker "<<processId << ": " << start << " " << end << "\n";
 
     // do the computations
     std::vector<int> partialResult = multiplySection(size1, size2, start, end, polynomial1, polynomial2);
@@ -91,7 +105,7 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
             end = size1 - 1;
         }
 
-        std::cout << "Master sends: " << start << " " << end << "\n";
+        //std::cout << "Master sends: " << start << " " << end << "\n";
         // send the indices
         MPI_Send(&start, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
         MPI_Ssend(&end, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
@@ -117,6 +131,7 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
     //{
     //    std::cout << finalResult[i] << " ";
     //}
+    printResult(finalResult);
 }
 
 
@@ -186,6 +201,7 @@ std::vector<int> shift(std::vector<int> original, int offset)
     return shifted;
 }
 
+
 std::vector<int> karatsubaRecursiveAsync(std::vector<int> polynomial1, std::vector<int> polynomial2)
 {
     if (polynomial1.size() == 2 || polynomial2.size() == 2)
@@ -235,15 +251,7 @@ std::vector<int> karatsubaRecursiveAsync(std::vector<int> polynomial1, std::vect
 void karatsubaAlgorithm(std::vector<int> polynomial1, std::vector<int> polynomial2)
 {
     std::vector<int> result = karatsubaRecursiveAsync(polynomial1, polynomial2);
-    
-    std::string resultStr = "";
-    for (int i = result.size() - 1; i >= 0; --i)
-    {
-        resultStr += std::to_string(result[i]) + " * x^" + std::to_string(i) + " + ";
-    }
-    resultStr.erase(resultStr.size() - 3, 3);
-
-    std::cout << "\nResult: " << resultStr <<"\n";
+    printResult(result);
 }
 
 void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<int> polynomial2)
@@ -266,6 +274,17 @@ void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<in
 void karatsubaWorker(int processId)
 {
 
+}
+
+std::vector<int> zeroPadding(std::vector<int> polynomial, int afterPaddingSize)
+{
+    std::vector<int> paddedPolynomial = std::vector<int>(afterPaddingSize, 0);
+    for (int i = 0; i < polynomial.size(); ++i)
+    {
+        paddedPolynomial[i] = polynomial[i];
+    }
+
+    return paddedPolynomial;
 }
 
 int main(int argc, char** argv) 
@@ -314,6 +333,15 @@ int main(int argc, char** argv)
         {
             std::cout << i << " ";
         }
+        if (polynomial1.size() < polynomial2.size())
+        {
+            polynomial1 = zeroPadding(polynomial1, polynomial2.size());
+        }
+        else if(polynomial2.size() < polynomial1.size())
+        {
+            polynomial2 = zeroPadding(polynomial2, polynomial1.size());
+        }
+
         // set the method to be used in multiplication
         if (method == "regular")
         {
