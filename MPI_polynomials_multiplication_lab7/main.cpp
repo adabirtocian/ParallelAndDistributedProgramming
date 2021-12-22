@@ -4,6 +4,8 @@
 #include <vector>
 #include <chrono>
 #include <string>
+#include <future>
+#include <thread> 
 
 std::vector<int> generatePolynomialCoefficients(int size, int additional=0)
 {
@@ -117,10 +119,155 @@ void regularMaster(int processes, std::vector<int> polynomial1, std::vector<int>
     //}
 }
 
+
+std::vector<int> slice(int start, int stop, std::vector<int> original)
+{
+    std::vector<int> slice;
+    for (int i = start; i <= stop; ++i)
+    {
+        slice.push_back(original[i]);
+    }
+
+    return slice;
+}
+
+std::vector<int> add2Polynomials(std::vector<int> polynomial1, std::vector<int> polynomial2)
+{
+    std::vector<int> result;
+    int smallerLen = polynomial1.size() < polynomial2.size() ? polynomial1.size() : polynomial2.size();
+    for (int i = 0; i < smallerLen; ++i)
+    {
+        result.push_back(polynomial1[i] + polynomial2[i]);
+    }
+
+    for (int i = smallerLen; i < polynomial1.size(); ++i)
+    {
+        result.push_back(polynomial1[i]);
+    }
+
+    for (int i = smallerLen; i < polynomial2.size(); ++i)
+    {
+        result.push_back(polynomial2[i]);
+
+    }
+    return result;
+}
+
+std::vector<int> substract2Polynomials(std::vector<int> polynomial1, std::vector<int> polynomial2)
+{
+    std::vector<int> result;
+    int smallerLen = polynomial1.size() < polynomial2.size() ? polynomial1.size() : polynomial2.size();
+    for (int i = 0; i < smallerLen; ++i)
+    {
+        result.push_back(polynomial1[i] - polynomial2[i]);
+    }
+
+    for (int i = smallerLen; i < polynomial1.size(); ++i)
+    {
+        result.push_back(polynomial1[i]);
+    }
+
+    for (int i = smallerLen; i < polynomial2.size(); ++i)
+    {
+        result.push_back(polynomial2[i]);
+
+    }
+    return result;
+}
+
+std::vector<int> shift(std::vector<int> original, int offset)
+{
+    std::vector<int> shifted = std::vector<int>(offset, 0);
+    for (int i = 0; i < original.size(); ++i)
+    {
+        shifted.push_back(original[i]);
+    }
+
+    return shifted;
+}
+
+std::vector<int> karatsubaRecursiveAsync(std::vector<int> polynomial1, std::vector<int> polynomial2)
+{
+    if (polynomial1.size() == 2 || polynomial2.size() == 2)
+    {
+        std::vector<int> result = std::vector<int>(polynomial1.size() + polynomial2.size()-1,0);
+        for (int i = 0; i < polynomial1.size(); ++i)
+        {
+            for (int j = 0; j < polynomial2.size(); ++j)
+            {
+                result[i + j] += polynomial1[i] * polynomial2[j];
+            }
+        }
+
+        return result;
+    }
+
+    int smallerLen = (polynomial1.size() > polynomial2.size() ? polynomial1.size() : polynomial2.size()) / 2;
+    
+    // split the polynomials in two parts
+    std::vector<int> smallCoeffP1 = slice(0, smallerLen - 1, polynomial1);
+    std::vector<int> bigCoeffP1 = slice(smallerLen, polynomial1.size() - 1, polynomial1);
+
+    std::vector<int> smallCoeffP2 = slice(0, smallerLen - 1, polynomial2);
+    std::vector<int> bigCoeffP2 = slice(smallerLen, polynomial2.size() - 1, polynomial2);
+
+    std::vector<int> sumPartsP1 = add2Polynomials(smallCoeffP1, bigCoeffP1);
+    std::vector<int> sumPartsP2 = add2Polynomials(smallCoeffP2, bigCoeffP2);
+
+    // decompose in smaller parts
+    std::future<std::vector<int>> smallCoeffsFuture = std::async(&karatsubaRecursiveAsync, smallCoeffP1, smallCoeffP2);
+    std::future<std::vector<int>> sumPartsCoeffsFuture = std::async(&karatsubaRecursiveAsync, sumPartsP1, sumPartsP2);
+    std::future<std::vector<int>> bigCoeffsFuture = std::async(&karatsubaRecursiveAsync, bigCoeffP1, bigCoeffP2);
+    std::vector<int> sumPartsCoeffs = sumPartsCoeffsFuture.get();
+    std::vector<int> bigCoeffs = bigCoeffsFuture.get();
+    std::vector<int> smallCoeffs = smallCoeffsFuture.get();
+
+    std::vector<int> middleCoeffs = substract2Polynomials(substract2Polynomials(sumPartsCoeffs, smallCoeffs), bigCoeffs);
+
+    // aggregate the resulting polynomial
+    std::vector<int> result1 = shift(bigCoeffs, 2 * smallerLen);
+    std::vector<int> result2 = shift(middleCoeffs, smallerLen);
+    std::vector<int> result = add2Polynomials(add2Polynomials(result1, result2), smallCoeffs);
+
+    return result;
+}
+
+void karatsubaAlgorithm(std::vector<int> polynomial1, std::vector<int> polynomial2)
+{
+    std::vector<int> result = karatsubaRecursiveAsync(polynomial1, polynomial2);
+    
+    std::string resultStr = "";
+    for (int i = result.size() - 1; i >= 0; --i)
+    {
+        resultStr += std::to_string(result[i]) + " * x^" + std::to_string(i) + " + ";
+    }
+    resultStr.erase(resultStr.size() - 3, 3);
+
+    std::cout << "\nResult: " << resultStr <<"\n";
+}
+
 void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<int> polynomial2)
+{
+    int size1 = polynomial1.size();
+    int size2 = polynomial2.size();
+
+    if (processes == 1)
+    {
+        // sequential
+        karatsubaAlgorithm(polynomial1, polynomial2);
+    }
+    //// send the data 
+    //MPI_Ssend(&size1, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);
+    //MPI_Ssend(polynomial1.data(), size1, MPI_INT, 1, 2, MPI_COMM_WORLD);
+    //MPI_Ssend(&size2, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);
+    //MPI_Ssend(polynomial2.data(), size2, MPI_INT, 1, 2, MPI_COMM_WORLD);
+}
+
+void karatsubaWorker(int processId)
 {
 
 }
+
 int main(int argc, char** argv) 
 {
     // Initialize the MPI environment
@@ -157,16 +304,16 @@ int main(int argc, char** argv)
         // generate 2 polynomials
         std::vector<int> polynomial1 = generatePolynomialCoefficients(size1);
         std::vector<int> polynomial2 = generatePolynomialCoefficients(size2, 5);
-        //std::cout << "Polynomials generated with sizes "<<size1 << " and " << size2 << "\n";
-        //for (int i : polynomial1)
-        //{
-        //    std::cout << i << " ";
-        //}
-        //std::cout << "\n";
-        //for (int i : polynomial2)
-        //{
-        //    std::cout << i << " ";
-        //}
+        std::cout << "Polynomials generated with sizes "<<size1 << " and " << size2 << "\n";
+        for (int i : polynomial1)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "\n";
+        for (int i : polynomial2)
+        {
+            std::cout << i << " ";
+        }
         // set the method to be used in multiplication
         if (method == "regular")
         {
@@ -174,7 +321,7 @@ int main(int argc, char** argv)
         }
         else if (method == "karatsuba")
         {
-            
+            karatsubaMaster(processes, polynomial1, polynomial2);
         }
     }
     else
