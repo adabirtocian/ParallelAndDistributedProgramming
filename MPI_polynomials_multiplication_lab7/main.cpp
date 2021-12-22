@@ -6,6 +6,7 @@
 #include <string>
 #include <future>
 #include <thread> 
+#include <chrono>
 
 std::vector<int> generatePolynomialCoefficients(int size, int additional=0)
 {
@@ -634,14 +635,23 @@ int main(int argc, char** argv)
             polynomial2 = zeroPadding(polynomial2, polynomial1.size());
         }
 
+        std::chrono::milliseconds start;
+        std::chrono::milliseconds end;
+
         // set the method to be used in multiplication
         if (method == "regular")
         {
+            start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
             regularMaster(processes, polynomial1, polynomial2);
+            end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+            std::cout << "Time: " << (end - start).count() << " ms\n";
         }
         else if (method == "karatsuba")
         {
+            start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
             karatsubaMaster(processes, polynomial1, polynomial2);
+            end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+            std::cout << "Time: " << (end - start).count() << " ms\n";
         }
     }
     else
