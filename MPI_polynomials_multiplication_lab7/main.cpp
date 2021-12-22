@@ -293,13 +293,6 @@ void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<in
     
     if (processes == 2)
     {
-        std::cout << "\nMaster\n";
-        for (auto s : smallCoeffP1)
-            std::cout << s << " ";
-        std::cout << "\n";
-        for (auto s : smallCoeffP2)
-            std::cout << s << " ";
-        std::cout << "\n";
         // one worker
         // send lower parts to be computed by the worker
         MPI_Ssend(&masterId, 1, MPI_INT, 1, 0, MPI_COMM_WORLD); // send parent id
@@ -319,6 +312,19 @@ void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<in
     }
     else if (processes == 3)
     {
+        std::cout << "\nMaster\n";
+        for (auto s : smallCoeffP1)
+            std::cout << s << " ";
+        std::cout << "\n";
+        for (auto s : smallCoeffP2)
+            std::cout << s << " ";
+        std::cout << "\n";
+        for (auto s : bigCoeffP1)
+            std::cout << s << " ";
+        std::cout << "\n";
+        for (auto s : bigCoeffP2)
+            std::cout << s << " ";
+        std::cout << "\n";
         // 2 workers
         // send lower parts to be computed by the first worker
         MPI_Ssend(&masterId, 1, MPI_INT, 1, 0, MPI_COMM_WORLD); // send parent id
@@ -326,7 +332,7 @@ void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<in
         MPI_Ssend(smallCoeffP1.data(), sizeSmallCoeffP1, MPI_INT, 1, 2, MPI_COMM_WORLD);
         MPI_Ssend(&sizeSmallCoeffP2, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);
         MPI_Ssend(smallCoeffP2.data(), sizeSmallCoeffP2, MPI_INT, 1, 2, MPI_COMM_WORLD);
-        MPI_Ssend(0, 1, MPI_INT, 1, 3, MPI_COMM_WORLD); // send the remaining workers available
+        MPI_Ssend(&remainingWorkers, 1, MPI_INT, 1, 3, MPI_COMM_WORLD); // send the remaining workers available
 
         // send higher parts to be computed by the second worker
         MPI_Ssend(&masterId, 1, MPI_INT, 2, 0, MPI_COMM_WORLD); // send parent id
@@ -334,28 +340,29 @@ void karatsubaMaster(int processes, std::vector<int> polynomial1, std::vector<in
         MPI_Ssend(bigCoeffP1.data(), sizeSmallCoeffP1, MPI_INT, 2, 2, MPI_COMM_WORLD);
         MPI_Ssend(&sizeBigCoeffP2, 1, MPI_INT, 2, 1, MPI_COMM_WORLD);
         MPI_Ssend(bigCoeffP2.data(), sizeSmallCoeffP2, MPI_INT, 2, 2, MPI_COMM_WORLD);
-        MPI_Ssend(0, 1, MPI_INT, 2, 3, MPI_COMM_WORLD); // send the remaining workers available
+        MPI_Ssend(&remainingWorkers, 1, MPI_INT, 2, 3, MPI_COMM_WORLD); // send the remaining workers available
 
         // maser takes care of the rest
         sumPartsCoeffs = karatsubaRecursiveAsync(sumPartsP1, sumPartsP2);
 
-        sizeSmallCoeffs;
         MPI_Recv(&sizeSmallCoeffs, 1, MPI_INT, 1, 1, MPI_COMM_WORLD, &status); // receive size of the partial computation
         smallCoeffs = std::vector<int>(sizeSmallCoeffs, 0);
         MPI_Recv(smallCoeffs.data(), sizeSmallCoeffs, MPI_INT, 1, 2, MPI_COMM_WORLD, &status); // receive the result as vector
 
-        sizeBigCoeffs;
         MPI_Recv(&sizeBigCoeffs, 1, MPI_INT, 2, 1, MPI_COMM_WORLD, &status); // receive size of the partial computation
-        smallCoeffs = std::vector<int>(sizeSmallCoeffs, 0);
-        MPI_Recv(bigCoeffs.data(), sizeSmallCoeffs, MPI_INT, 2, 2, MPI_COMM_WORLD, &status); // receive the result as vector
+        bigCoeffs = std::vector<int>(sizeBigCoeffs, 0);
+        MPI_Recv(bigCoeffs.data(), sizeBigCoeffs, MPI_INT, 2, 2, MPI_COMM_WORLD, &status); // receive the result as vector
     }
     else
     {
         // at least 3 workers
     }
 
-    std::cout << "Received: " << sizeSmallCoeffs << "\n";
+    std::cout << "Received: " << sizeSmallCoeffs << " "<<sizeBigCoeffs<< "\n";
     for (auto s : smallCoeffs)
+        std::cout << s << " ";
+    std::cout << "\n";
+    for (auto s : bigCoeffs)
         std::cout << s << " ";
     std::cout << "\n";
     middleCoeffs = substract2Polynomials(substract2Polynomials(sumPartsCoeffs, smallCoeffs), bigCoeffs);
