@@ -51,7 +51,7 @@ Explore each node and mark it as visited and also keep a vector to add each visi
 Time: 2ms  
 Threads: 5  
 Result: 1,2,3,4,1  
-<img scr="https://github.com/adabirtocian/ParallelAndDistributedProgramming/blob/master/Hamiltonean_cycle_lab6/tests/graph_4nodes_1HC.png" height="100">  
+![img1]<img scr="https://github.com/adabirtocian/ParallelAndDistributedProgramming/blob/master/Hamiltonean_cycle_lab6/tests/graph_4nodes_1HC.png" height="100">  
 
 Time: 5ms  
 Threads: 5  
@@ -60,12 +60,12 @@ Result: 3,4,5,2,3
 Time: 4ms  
 Threads: 10  
 Result: 3,4,5,2,3    
-<img scr="https://github.com/adabirtocian/ParallelAndDistributedProgramming/blob/master/Hamiltonean_cycle_lab6/tests/graph_9nodes_3HC.png" height="100">  
+![img2]<img scr="https://github.com/adabirtocian/ParallelAndDistributedProgramming/blob/master/Hamiltonean_cycle_lab6/tests/graph_9nodes_3HC.png" height="100">  
 
 Time: 0ms  
 Threads: 5  
 Result: -  
-<img scr="https://github.com/adabirtocian/ParallelAndDistributedProgramming/blob/master/Hamiltonean_cycle_lab6/tests/graph_no_cycle.png" height="100">  
+![img3]<img scr="https://github.com/adabirtocian/ParallelAndDistributedProgramming/blob/master/Hamiltonean_cycle_lab6/tests/graph_no_cycle.png" height="100">  
 
 [Lab 7 - MPI](MPI_polynomials_multiplication_lab7)  
 Perform the multiplication of 2 polynomials, by distributing computation across several nodes using MPI. Use both the regular O(n2) algorithm and the Karatsuba algorithm.  
