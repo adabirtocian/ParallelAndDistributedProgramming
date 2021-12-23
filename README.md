@@ -37,7 +37,17 @@ form and a parallelized form. Compare the 4 variants.
 
 | Degrees	| Regular	| Regular parallelized |	Karatsuba |	Karatsuba parallelized |  
 | ------- |:-------:|:--------------------:|:----------:|:----------------------:|  
-| 255, 255	| 1 ms	| 742 ms	| 37 ms |	486 ms |  
-| 63, 31 |	0 ms	| 138 ms |	5 ms |	41 ms |  
-| 63, 127 |	0 ms |	278 ms	| 8 ms	| 106ms |  
-| 511, 255 |	2 ms	| 1143 ms |	82 ms |	49576 ms |  
+| 256, 256	| 1 ms	| 742 ms	| 37 ms |	486 ms |  
+| 64, 32 |	0 ms	| 138 ms |	5 ms |	41 ms |  
+| 64, 128 |	0 ms |	278 ms	| 8 ms	| 106ms |  
+| 512, 256 |	2 ms	| 1143 ms |	82 ms |	49576 ms |  
+
+[Lab 7 - MPI](MPI_polynomials_multiplication_lab7)  
+Perform the multiplication of 2 polynomials, by distributing computation across several nodes using MPI. Use both the regular O(n2) algorithm and the Karatsuba algorithm.  
+
+| Degrees	| Regular MPI	| Regular parallelized |	Karatsuba MPI |	Karatsuba parallelized |  
+| ------- |:-------:|:--------------------:|:----------:|:----------------------:|  
+| 256, 256	| 8 ms	| 742 ms	| 120 ms |	486 ms |  
+| 64, 32 |	6 ms	| 138 ms |	13 ms |	41 ms |  
+| 64, 128 |	7 ms |	278 ms	| 41 ms	| 106ms |  
+
