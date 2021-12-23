@@ -47,11 +47,11 @@ Given a directed graph, find a Hamiltonean cycle, if one exists. Use multiple th
 * Algorithm
 Explore each node and mark it as visited and also keep a vector to add each visited node. Then, explore all the edges starting from it, using an async thread to test half of them possibilities and the other half is explored on the main thread. When finding a visited node, there is a cycle and the algorithm stops by printing the result from the vector of visited nodes and mark an atomic variable to 1 so that the other threads stop the search as well.  
 
-* Tests
+* Tests  
 Time: 2ms  
 Threads: 5  
 Result: 1,2,3,4,1  
-![](Hamiltonean_cycle_lab6/tests/graph_4nodes_1HC.png)  
+![](Hamiltonean_cycle_lab6/tests/graph_4nodes_1HC.png | height=100)  
 
 Time: 5ms  
 Threads: 5  
@@ -60,12 +60,12 @@ Result: 3,4,5,2,3
 Time: 4ms  
 Threads: 10  
 Result: 3,4,5,2,3  
-![](Hamiltonean_cycle_lab6/tests/graph_9nodes_3HC.png)  
+![](Hamiltonean_cycle_lab6/tests/graph_9nodes_3HC.png | height=100)  
 
 Time: 0ms  
 Threads: 5  
 Result: -  
-![](Hamiltonean_cycle_lab6/tests/graph_no_cycle.png)  
+![](Hamiltonean_cycle_lab6/tests/graph_no_cycle.png | height=100)  
 
 [Lab 7 - MPI](MPI_polynomials_multiplication_lab7)  
 Perform the multiplication of 2 polynomials, by distributing computation across several nodes using MPI. Use both the regular O(n2) algorithm and the Karatsuba algorithm.  
