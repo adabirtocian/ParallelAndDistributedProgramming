@@ -44,28 +44,28 @@ form and a parallelized form. Compare the 4 variants.
 
 [Lab 6 - Parallel explore](Hamiltonean_cycle_lab6)  
 Given a directed graph, find a Hamiltonean cycle, if one exists. Use multiple threads to parallelize the search.  
-# Algorithm
+* Algorithm
 Explore each node and mark it as visited and also keep a vector to add each visited node. Then, explore all the edges starting from it, using an async thread to test half of them possibilities and the other half is explored on the main thread. When finding a visited node, there is a cycle and the algorithm stops by printing the result from the vector of visited nodes and mark an atomic variable to 1 so that the other threads stop the search as well.  
 
-#Tests
-Time: 2ms
-Threads: 5
-Result: 1,2,3,4,1
-![](tests/graph_4nodes_1HC.png)
+* Tests
+Time: 2ms  
+Threads: 5  
+Result: 1,2,3,4,1  
+![](Hamiltonean_cycle_lab6/tests/graph_4nodes_1HC.png)  
 
-Time: 5ms
-Threads: 5
-Result: 3,4,5,2,3
+Time: 5ms  
+Threads: 5  
+Result: 3,4,5,2,3  
 
-Time: 4ms
-Threads: 10
-Result: 3,4,5,2,3
-![](tests/graph_9nodes_3HC.png)
+Time: 4ms  
+Threads: 10  
+Result: 3,4,5,2,3  
+![](Hamiltonean_cycle_lab6/tests/graph_9nodes_3HC.png)  
 
-Time: 0ms
-Threads: 5
-Result: -
-![](tests/graph_no_cycle.png)
+Time: 0ms  
+Threads: 5  
+Result: -  
+![](Hamiltonean_cycle_lab6/tests/graph_no_cycle.png)  
 
 [Lab 7 - MPI](MPI_polynomials_multiplication_lab7)  
 Perform the multiplication of 2 polynomials, by distributing computation across several nodes using MPI. Use both the regular O(n2) algorithm and the Karatsuba algorithm.  
