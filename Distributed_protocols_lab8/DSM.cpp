@@ -95,27 +95,27 @@ void DSM::start()
     // send operations for variables
     // p1
     MPI_Ssend(&operationsP1, 1, MPI_INT, process1, 123, MPI_COMM_WORLD);
-    this->sentSetOperations(process1, 'a', 3);
-    this->sentSetOperations(process1, 'b', 4);
-    this->sentSetOperations(process1, 'c', 5);
+    this->sentSetOperations(process1, 'a', 23);
+    this->sentSetOperations(process1, 'b', 24);
+    this->sentSetOperations(process1, 'c', 25);
     
     // p2
     MPI_Ssend(&operationsP2, 1, MPI_INT, process2, 123, MPI_COMM_WORLD);
-    this->sentSetOperations(process2, 'a', 1);
-    this->sentSetOperations(process2, 'b', 2);
-    this->sentSetOperations(process2, 'c', 3);
+    this->sentSetOperations(process2, 'a', 21);
+    this->sentSetOperations(process2, 'b', 22);
+    this->sentSetOperations(process2, 'c', 23);
     
     // p3
     MPI_Ssend(&operationsP3, 1, MPI_INT, process3, 123, MPI_COMM_WORLD);
-    this->sentSetOperations(process3, 'a', 8);
-    this->sentSetOperations(process3, 'c', 9);
-    this->sentSetOperations(process3, 'd', 10);
+    this->sentSetOperations(process3, 'a', 28);
+    this->sentSetOperations(process3, 'c', 29);
+    this->sentSetOperations(process3, 'd', 20);
     
     // p4
     MPI_Ssend(&operationsP4, 1, MPI_INT, process4, 123, MPI_COMM_WORLD);
-    this->sentSetOperations(process4, 'a', 2);
-    this->sentSetOperations(process4, 'c', 3);
-    this->sentSetOperations(process4, 'd', 4);
+    this->sentSetOperations(process4, 'a', 22);
+    this->sentSetOperations(process4, 'c', 23);
+    this->sentSetOperations(process4, 'd', 24);
 
     //std::cout << "Done 0!\n";
 }

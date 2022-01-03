@@ -26,7 +26,7 @@ std::pair<char, int> Process::execNextOperation()
 		this->currentOperationIdx++;
 		return op;
 	}
-	return std::pair<char, int>('-', -1);
+	return std::pair<char, int>('-', -2);
 	
 }
 
@@ -177,6 +177,7 @@ void Process::sendSetOperationsFromFramework()
 	{
 		std::cout << std::get<0>(setOperations[i]) << "=" << std::get<1>(setOperations[i]) << " ts=" << std::get<2>(setOperations[i]) << " process=" << std::get<3>(setOperations[i])<<"\n";
 	}
+	
 	// send operations 
 	//int sendCode = 3, value, ts, destination;
 	//char variable;
@@ -272,32 +273,46 @@ void Process::work()
 	bool atTheBeginning = true;
 	int sendCode = 1; // code for prepare
 	char receivedVar = '-';
-	int parent = 0, ts = 0;
+	int parent = 0, ts = 0, counterForClose=0;
 	std::pair<char, int> operation;
-	
+	std::cout << this->id << " started\n";
 	while (actionCode != -1)
 	{
 		if (!atTheBeginning) {
 			MPI_Recv(&actionCode, 1, MPI_INT, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &this->status);
 			parent = this->status.MPI_SOURCE;
-			//std::cout << "Code=" << actionCode << " from " << parent << "\n";
+			std::cout << "Code=" << actionCode << " from " << parent << "\n";
 		}
 		atTheBeginning = false;
 		switch (actionCode)
 		{
 		case(0):
-			// set operation
+			// send prepare message for a set operation
 			operation = this->execNextOperation();
 			variable = operation.first;
 			value = operation.second;
 
 			std::cout << "operation " << variable << " = " << value << "\n";
 
-			// check for valid operation
-			if (variable == '-' && value == -1)
+			// check for invalid operation
+			if (variable == '-' && value == -2)
 			{
-				// invalid operation
+				//std::cout << counterForClose << "\n";
 				actionCode = -1;
+				sendCode = 10; // send all operations
+				for (int i = 1; i <= 4; ++i)
+				{
+					if (this->id != i)
+					{
+						MPI_Send(&sendCode, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
+						std::cout << this->id << " send to " << i << " 10\n";
+					}
+				}
+				if (counterForClose == 3)
+				{
+					actionCode = -1;
+				}
+				
 				break;
 			}
 
@@ -317,20 +332,18 @@ void Process::work()
 					MPI_Send(&this->timestamp, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
 				}
 			}
-			actionCode = 0;
+			//actionCode = 0;
 			break;
-		case(-1):
-			// stop
-			break;
+
 		case(1):
 			// receive prepare messages
 			MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
 			MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
 			MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-			std::cout <<this->id<< " received from "<<parent<<" : "<< variable << "=" << value << " " << this->timestamp << "\n";
-			
+				
 			// update timestamp
 			this->setTimestamp(std::max(ts, this->timestamp) + 1);
+			std::cout << this->id << " received from " << parent << " : " << receivedVar << "=" << value << " " << ts << " new ts = " << this->timestamp << "\n";
 			
 			// save received prepare message
 			this->addReceivedPrepareMsg(receivedVar, this->timestamp, parent);
@@ -370,7 +383,6 @@ void Process::work()
 						MPI_Send(&sendCode, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
 					}
 				}
-				//actionCode = -1;
 			}
 			
 			break;
@@ -393,12 +405,21 @@ void Process::work()
 			// check if all operations for the prepare messages were received
 			if (this->areAllOperationsForPrepares())
 			{
+				std::cout << "All op for prepares\n";
 				// send notify to all processes with the same order for the operations
-				this->sendNotify();
+				//this->sendNotify();
 			}
 		
 			// stop 
 			actionCode = -1;
+			break;
+		case(10):
+			counterForClose++;
+			std::cout << this->id << " ----- "<<counterForClose << "\n";
+			if (counterForClose == 3 && this->receivedPrepareMsgs.size() == 3)
+			{
+				actionCode = -1;
+			}
 			break;
 		default:
 			std::cout << "Invalid code " << actionCode << " in process " << this->id << "\n";
