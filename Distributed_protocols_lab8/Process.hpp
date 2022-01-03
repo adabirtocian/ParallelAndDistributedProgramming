@@ -37,5 +37,7 @@ public:
 	void addOperationFramework(char var, int value, int ts);
 	void sendNotify();
 	void setValueForVar(char var, int value);
+	void sendSetOperationsFromFramework();
+	bool isTsSmaller(int ts);
 };
 

@@ -117,6 +117,6 @@ void DSM::start()
     this->sentSetOperations(process4, 'c', 3);
     this->sentSetOperations(process4, 'd', 4);
 
-    std::cout << "Done 0!\n";
+    //std::cout << "Done 0!\n";
 }
 

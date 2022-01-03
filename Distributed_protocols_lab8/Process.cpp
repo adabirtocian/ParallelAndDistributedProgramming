@@ -57,12 +57,12 @@ void Process::addReceivedPrepareResponse(char var, int ts, int process)
 
 bool Process::areAllPrepareResponses(char variable)
 {
-	return this->getSubscribersForVar(variable).size() == this->receivedPrepareResponses.size();
+	return this->getSubscribersForVar(variable).size() - 1 == this->receivedPrepareResponses.size();
 }
 
 bool Process::areAllOperationsForPrepares()
 {
-	return this->operationsFramework.size() == this->receivedPrepareMsgs.size();
+	return this->operationsFramework.size() - 1 == this->receivedPrepareMsgs.size();
 }
 
 void Process::closePrepare(char variable)
@@ -78,6 +78,15 @@ void Process::closePrepare(char variable)
 
 void Process::addOperationFramework(char var, int value, int ts)
 {
+	for (int i = 0; i < this->operationsFramework.size(); ++i)
+	{
+		if (std::get<0>(this->operationsFramework[i]) == var)
+		{
+			// update the timestamp
+			this->operationsFramework[i] = std::tuple<char, int, int>(var, value, ts);
+			return;
+		}
+	}
 	this->operationsFramework.push_back(std::tuple<char, int, int>(var, value, ts));
 }
 
@@ -119,9 +128,11 @@ void Process::sendNotify()
 	{
 		auto var = std::get<0>(this->operationsFramework[i]);
 		auto value = std::get<1>(this->operationsFramework[i]);
+		auto ts = std::get<2>(this->operationsFramework[i]);
 
 		//  set value
 		this->setValueForVar(var, value);
+		std::cout << "notify " << var << "=" << value << "; ts=" << ts << "\n";
 	}
 }
 
@@ -134,6 +145,85 @@ void Process::setValueForVar(char var, int value)
 			this->values[i] = value;
 		}
 	}
+}
+
+void Process::sendSetOperationsFromFramework()
+{
+	std::vector<std::tuple<char, int, int, int>> setOperations;
+	for (int i = 0; i < this->receivedPrepareResponses.size(); ++i)
+	{
+		auto var = std::get<0>(this->receivedPrepareResponses[i]);
+		auto ts = std::get<1>(this->receivedPrepareResponses[i]);
+		auto process = std::get<2>(this->receivedPrepareResponses[i]);
+
+		setOperations.push_back(std::tuple<char, int, int, int>(var, this->operations[0].second, ts, process));
+	}
+
+	// sort by ts
+	std::tuple<char, int, int, int> aux;
+	for (int i = 0; i < setOperations.size(); ++i)
+	{
+		for (int j = i + 1; j < setOperations.size(); ++j)
+		{
+			if (std::get<2>(setOperations[i]) > std::get<2>(setOperations[j]))
+			{
+				aux = setOperations[i];
+				setOperations[i] = setOperations[j];
+				setOperations[j] = aux;
+			}
+		}
+	}
+	for (int i = 0; i < setOperations.size(); ++i)
+	{
+		std::cout << std::get<0>(setOperations[i]) << "=" << std::get<1>(setOperations[i]) << " ts=" << std::get<2>(setOperations[i]) << " process=" << std::get<3>(setOperations[i])<<"\n";
+	}
+	// send operations 
+	//int sendCode = 3, value, ts, destination;
+	//char variable;
+	//for (auto op : setOperations)
+	//{
+	//	variable = std::get<0>(op);
+	//	value = std::get<1>(op);
+	//	ts = std::get<2>(op);
+	//	destination = std::get<3>(op);
+	//
+	//	if (this->isTsSmaller(ts) || this->id == 1)
+	//	{
+	//		this->increaseTimestamp();
+	//		if (this->id == destination)
+	//		{
+	//			this->addOperationFramework(variable, value, ts);
+	//		}
+	//		else
+	//		{
+	//			MPI_Send(&sendCode, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
+	//			MPI_Send(&variable, 1, MPI_CHAR, destination, 123, MPI_COMM_WORLD);
+	//			MPI_Send(&value, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
+	//			MPI_Send(&ts, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		std::cout << this->id << " failed\n";
+	//	}
+	//}
+
+
+}
+
+bool Process::isTsSmaller(int ts)
+{
+	for (auto prepare : this->receivedPrepareMsgs)
+	{
+		if (std::get<3>(prepare))
+		{
+			if (ts > std::get<1>(prepare))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
 }
 
 void Process::work()
@@ -173,7 +263,7 @@ void Process::work()
 		MPI_Recv(&variable, 1, MPI_CHAR, 0, 1, MPI_COMM_WORLD, &this->status);
 		MPI_Recv(&value, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &this->status);
 		this->addOperation(variable, value);
-		std::cout << this->id << " " << variable << "=" << value << "\n";
+		//std::cout << this->id << " " << variable << "=" << value << "\n";
 	}
 
 	
@@ -190,7 +280,7 @@ void Process::work()
 		if (!atTheBeginning) {
 			MPI_Recv(&actionCode, 1, MPI_INT, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &this->status);
 			parent = this->status.MPI_SOURCE;
-			std::cout << "Code=" << actionCode << " from " << parent << "\n";
+			//std::cout << "Code=" << actionCode << " from " << parent << "\n";
 		}
 		atTheBeginning = false;
 		switch (actionCode)
@@ -201,7 +291,7 @@ void Process::work()
 			variable = operation.first;
 			value = operation.second;
 
-			//std::cout << "operation " << variable << " = " << value << "\n";
+			std::cout << "operation " << variable << " = " << value << "\n";
 
 			// check for valid operation
 			if (variable == '-' && value == -1)
@@ -211,7 +301,6 @@ void Process::work()
 				break;
 			}
 
-			// store the operation in framework
 			this->addOperationFramework(variable, value, this->timestamp);
 
 			// iterate over the subscribers of the variable and send prepare message
@@ -221,11 +310,11 @@ void Process::work()
 				{
 					this->increaseTimestamp();
 					sendCode = 1; // prepare message
-					std::cout << "send to " << process << " " << variable << " " << value << " " << this->timestamp << "\n";
-					MPI_Ssend(&sendCode, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
-					//MPI_Ssend(&variable, 1, MPI_CHAR, process, 1, MPI_COMM_WORLD);
-					//MPI_Ssend(&value, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
-					//MPI_Ssend(&this->timestamp, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
+					std::cout <<this->id<< " send to " << process << " : " << variable << "=" << value << " " << this->timestamp << "\n";
+					MPI_Send(&sendCode, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
+					MPI_Send(&variable, 1, MPI_CHAR, process, 1, MPI_COMM_WORLD);
+					MPI_Send(&value, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
+					MPI_Send(&this->timestamp, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
 				}
 			}
 			actionCode = 0;
@@ -235,80 +324,87 @@ void Process::work()
 			break;
 		case(1):
 			// receive prepare messages
-			//MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
-			//MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-			//MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-			std::cout << "received "<<this->id<<" " << variable << " " << value << " " << this->timestamp << "\n";
+			MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
+			MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
+			MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
+			std::cout <<this->id<< " received from "<<parent<<" : "<< variable << "=" << value << " " << this->timestamp << "\n";
+			
 			// update timestamp
-			//this->setTimestamp(std::max(ts, this->timestamp) + 1);
+			this->setTimestamp(std::max(ts, this->timestamp) + 1);
 			
 			// save received prepare message
-			//this->addReceivedPrepareMsg(receivedVar, this->timestamp, parent);
+			this->addReceivedPrepareMsg(receivedVar, this->timestamp, parent);
 
 			// send response back
 			sendCode = 2; // response for a prepare message
-			//MPI_Ssend(&sendCode, 1, MPI_INT, parent, 1, MPI_COMM_WORLD);
-			//MPI_Ssend(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD);
-			//MPI_Ssend(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD);
-			//MPI_Ssend(&this->timestamp, 1, MPI_INT, parent, 1, MPI_COMM_WORLD);
-			actionCode = -1; // FOR TESTING ONLY
+			MPI_Send(&sendCode, 1, MPI_INT, parent, 1, MPI_COMM_WORLD);
+			MPI_Send(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD);
+			MPI_Send(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD);
+			MPI_Send(&this->timestamp, 1, MPI_INT, parent, 1, MPI_COMM_WORLD);
 			break;
+		
+		case(2):
+			// receive a response for the prepare message sent from ths current process
+			MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
+			MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
+			MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
+		
+			// update timestamp
+			this->setTimestamp(std::max(ts, this->timestamp) + 1);
+		
+			// save the response to the prepare message
+			this->addReceivedPrepareResponse(receivedVar, ts, parent);
+		
+			// check if all responses were received
+			if (this->areAllPrepareResponses(receivedVar))
+			{
+				// send the set operations
+				this->sendSetOperationsFromFramework();
+
+				for (auto process : this->getSubscribersForVar(receivedVar))
+				{
+					if (process != this->id)
+					{
+						sendCode = 0; // prepare message
+						//std::cout << this->id << " send to " << process << " : " << variable << "=" << value << " " << this->timestamp << "\n";
+						MPI_Send(&sendCode, 1, MPI_INT, process, 1, MPI_COMM_WORLD);
+					}
+				}
+				//actionCode = -1;
+			}
 			
-		//case(2):
-		//	// receive a response for the prepare message sent from ths current process
-		//	MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
-		//	MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-		//	MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-		//
-		//	// update timestamp
-		//	this->setTimestamp(std::max(ts, this->timestamp) + 1);
-		//
-		//	// save the response to the prepare message
-		//	this->addReceivedPrepareResponse(receivedVar, ts, parent);
-		//
-		//	// check if all responses were received
-		//	if (this->areAllPrepareResponses(receivedVar))
-		//	{
-		//
-		//	}
-		//
-		//	break;
-		//
-		//case(3):
-		//	// receive set operation from another process
-		//	MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
-		//	MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-		//	MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-		//
-		//	// increase timestamp
-		//	this->setTimestamp(std::max(ts, this->timestamp) + 1);
-		//
-		//	// close prepare phase
-		//	this->closePrepare(receivedVar);
-		//
-		//	// save operation in framework
-		//	this->addOperationFramework(receivedVar, value, ts);
-		//
-		//	// check if all operations for the prepare messages were received
-		//	if (this->areAllOperationsForPrepares())
-		//	{
-		//		// send notify to all processes with the same order for the operations
-		//		this->sendNotify();
-		//	}
-		//
-		//	// stop 
-		//	actionCode = -1;
-		//	break;
+			break;
+		
+		case(3):
+			// receive set operation from another process
+			MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
+			MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
+			MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
+		
+			// increase timestamp
+			this->setTimestamp(std::max(ts, this->timestamp) + 1);
+		
+			// close prepare phase
+			this->closePrepare(receivedVar);
+		
+			// save operation in framework
+			this->addOperationFramework(receivedVar, value, ts);
+		
+			// check if all operations for the prepare messages were received
+			if (this->areAllOperationsForPrepares())
+			{
+				// send notify to all processes with the same order for the operations
+				this->sendNotify();
+			}
+		
+			// stop 
+			actionCode = -1;
+			break;
 		default:
 			std::cout << "Invalid code " << actionCode << " in process " << this->id << "\n";
 			actionCode = -1;
 			break;
-		}
-
-		MPI_Recv(&actionCode, 1, MPI_INT, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &this->status);
-		parent = this->status.MPI_SOURCE;
-		std::cout << "Code=" << actionCode << " from " << parent << "\n";
-		
+		}		
 	}
 	
 	std::cout << "STOP " << this->id << "\n";
