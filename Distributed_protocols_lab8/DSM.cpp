@@ -40,33 +40,33 @@ void DSM::start()
 
     std::unordered_map<char, std::vector<int>> subscribersOfVariables;
     subscribersOfVariables.insert(
-        std::pair<char, std::vector<int>>('a', std::vector<int>{process1, process2, process3, process4})
+        std::make_pair<char, std::vector<int>>('a', std::vector<int>{process1, process2, process3, process4})
     );
     subscribersOfVariables.insert(
-        std::pair<char, std::vector<int>>('b', std::vector<int>{process1, process2})
+        std::make_pair<char, std::vector<int>>('b', std::vector<int>{process1, process2})
     );
     subscribersOfVariables.insert(
-        std::pair<char, std::vector<int>>('c', std::vector<int>{process1, process2, process3, process4})
+        std::make_pair<char, std::vector<int>>('c', std::vector<int>{process1, process2, process3, process4})
     );
     subscribersOfVariables.insert(
-        std::pair<char, std::vector<int>>('d', std::vector<int>{process3, process4})
+        std::make_pair<char, std::vector<int>>('d', std::vector<int>{process3, process4})
     );
 
     // send to process 1 its variables
     MPI_Ssend(&sizeVarsP1, 1, MPI_INT, process1, 1, MPI_COMM_WORLD);
-    MPI_Ssend(variablesP1.data(), sizeVarsP1, MPI_INT, process1, 2, MPI_COMM_WORLD);
+    MPI_Ssend(variablesP1.data(), sizeVarsP1, MPI_CHAR, process1, 2, MPI_COMM_WORLD);
     
     // send to process 2 its variables
     MPI_Ssend(&sizeVarsP2, 1, MPI_INT, process2, 1, MPI_COMM_WORLD);
-    MPI_Ssend(variablesP2.data(), sizeVarsP2, MPI_INT, process2, 2, MPI_COMM_WORLD);
-
+    MPI_Ssend(variablesP2.data(), sizeVarsP2, MPI_CHAR, process2, 2, MPI_COMM_WORLD);
+    
     // send to process 3 its variables
     MPI_Ssend(&sizeVarsP3, 1, MPI_INT, process3, 1, MPI_COMM_WORLD);
-    MPI_Ssend(variablesP3.data(), sizeVarsP3, MPI_INT, process3, 2, MPI_COMM_WORLD);
-
+    MPI_Ssend(variablesP3.data(), sizeVarsP3, MPI_CHAR, process3, 2, MPI_COMM_WORLD);
+    
     // send to process 4 its variables
     MPI_Ssend(&sizeVarsP4, 1, MPI_INT, process4, 1, MPI_COMM_WORLD);
-    MPI_Ssend(variablesP4.data(), sizeVarsP4, MPI_INT, process4, 2, MPI_COMM_WORLD);
+    MPI_Ssend(variablesP4.data(), sizeVarsP4, MPI_CHAR, process4, 2, MPI_COMM_WORLD);
     
     // send to each process all subscribers
     for (auto entry : subscribersOfVariables)
@@ -94,27 +94,29 @@ void DSM::start()
 
     // send operations for variables
     // p1
-    MPI_Ssend(&operationsP1, 1, MPI_INT, process1, 1, MPI_COMM_WORLD);
+    MPI_Ssend(&operationsP1, 1, MPI_INT, process1, 123, MPI_COMM_WORLD);
     this->sentSetOperations(process1, 'a', 3);
     this->sentSetOperations(process1, 'b', 4);
     this->sentSetOperations(process1, 'c', 5);
-
+    
     // p2
-    MPI_Ssend(&operationsP2, 1, MPI_INT, process2, 1, MPI_COMM_WORLD);
+    MPI_Ssend(&operationsP2, 1, MPI_INT, process2, 123, MPI_COMM_WORLD);
     this->sentSetOperations(process2, 'a', 1);
     this->sentSetOperations(process2, 'b', 2);
     this->sentSetOperations(process2, 'c', 3);
-
+    
     // p3
-    MPI_Ssend(&operationsP3, 1, MPI_INT, process3, 1, MPI_COMM_WORLD);
+    MPI_Ssend(&operationsP3, 1, MPI_INT, process3, 123, MPI_COMM_WORLD);
     this->sentSetOperations(process3, 'a', 8);
     this->sentSetOperations(process3, 'c', 9);
     this->sentSetOperations(process3, 'd', 10);
-
+    
     // p4
-    MPI_Ssend(&operationsP4, 1, MPI_INT, process4, 1, MPI_COMM_WORLD);
+    MPI_Ssend(&operationsP4, 1, MPI_INT, process4, 123, MPI_COMM_WORLD);
     this->sentSetOperations(process4, 'a', 2);
     this->sentSetOperations(process4, 'c', 3);
     this->sentSetOperations(process4, 'd', 4);
+
+    std::cout << "Done 0!\n";
 }
 

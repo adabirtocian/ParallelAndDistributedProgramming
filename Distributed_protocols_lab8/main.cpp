@@ -5,12 +5,21 @@
 #include "DSM.hpp"
 #include "Process.hpp"
 
+void worker(int currentProcessRank)
+{
+    
+}
+
+
+// mpiexec -n 5
 int main(int argc, char** argv)
 {
 	// Initialize the MPI environment
 	MPI_Init(0, 0);
 
     int processes, currentProcessRank;
+    Process* process;
+
     // Get the number of available processes
     MPI_Comm_size(MPI_COMM_WORLD, &processes);
 
@@ -27,12 +36,11 @@ int main(int argc, char** argv)
     else
     {
         // workers
-        Process process = Process(currentProcessRank);
-        process.work();
+        process = new Process(currentProcessRank);
+        process->work();
     }
 
     // Finalize the MPI environment.
     MPI_Finalize();
-
     return 0;
 }
