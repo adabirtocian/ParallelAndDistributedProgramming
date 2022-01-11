@@ -179,35 +179,35 @@ void Process::sendSetOperationsFromFramework()
 	}
 	
 	// send operations 
-	//int sendCode = 3, value, ts, destination;
-	//char variable;
-	//for (auto op : setOperations)
-	//{
-	//	variable = std::get<0>(op);
-	//	value = std::get<1>(op);
-	//	ts = std::get<2>(op);
-	//	destination = std::get<3>(op);
-	//
-	//	if (this->isTsSmaller(ts) || this->id == 1)
-	//	{
-	//		this->increaseTimestamp();
-	//		if (this->id == destination)
-	//		{
-	//			this->addOperationFramework(variable, value, ts);
-	//		}
-	//		else
-	//		{
-	//			MPI_Send(&sendCode, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
-	//			MPI_Send(&variable, 1, MPI_CHAR, destination, 123, MPI_COMM_WORLD);
-	//			MPI_Send(&value, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
-	//			MPI_Send(&ts, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
-	//		}
-	//	}
-	//	else
-	//	{
-	//		std::cout << this->id << " failed\n";
-	//	}
-	//}
+	int sendCode = 3, value, ts, destination;
+	char variable;
+	for (auto op : setOperations)
+	{
+		variable = std::get<0>(op);
+		value = std::get<1>(op);
+		ts = std::get<2>(op);
+		destination = std::get<3>(op);
+	
+		if (this->isTsSmaller(ts) || this->id == 1)
+		{
+			this->increaseTimestamp();
+			if (this->id == destination)
+			{
+				this->addOperationFramework(variable, value, ts);
+			}
+			else
+			{
+				MPI_Send(&sendCode, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
+				MPI_Send(&variable, 1, MPI_CHAR, destination, 123, MPI_COMM_WORLD);
+				MPI_Send(&value, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
+				MPI_Send(&ts, 1, MPI_INT, destination, 123, MPI_COMM_WORLD);
+			}
+		}
+		else
+		{
+			std::cout << this->id << " failed\n";
+		}
+	}
 
 
 }
@@ -392,7 +392,8 @@ void Process::work()
 			MPI_Recv(&receivedVar, 1, MPI_CHAR, parent, 1, MPI_COMM_WORLD, &this->status);
 			MPI_Recv(&value, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
 			MPI_Recv(&ts, 1, MPI_INT, parent, 1, MPI_COMM_WORLD, &this->status);
-		
+			std::cout << "case 3\n";
+
 			// increase timestamp
 			this->setTimestamp(std::max(ts, this->timestamp) + 1);
 		
